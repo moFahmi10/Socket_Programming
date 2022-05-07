@@ -1,10 +1,15 @@
 print("??")
 import socket
 from urllib import response
-server_socket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+
+server_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 HOST = "127.0.0.1"
 PORT = 65432
 
+from _thread import *
+import threading
+
+print_lock = threading.Lock()
 
 def handlePostRequest(headers,filename):
     content = headers[0].split()[-1]
@@ -41,21 +46,43 @@ def parseRequest(req):
 
     return content
 
-server_address = (HOST,PORT)
+def threaded(c):
+    while True:
+ 
+        # data received from client
+        data = c.recv(1024)
+        
+        if not data:
+            print('Connection closed')
+             
+            # lock released on exit
+            print_lock.release()
+            break
+        response = parseRequest(data.decode())
+        c.sendall(response.encode())
+    # connection closed
+    c.close()
+     
+def Main():
+    server_address = (HOST,PORT)
+    s=socket.socket(socket.AF_INET,socket.SOCK_STREAM) 
+    s.bind(server_address)
+    s.listen()
+    print("The server is ready to recieve...")
 
-while True:
-    with socket.socket(socket.AF_INET,socket.SOCK_STREAM) as s:
-        s.bind(server_address)
-        s.listen()
-        print("The server is ready to recieve...")
+    while True:  
+
         conn, addr = s.accept()
-        with conn:
-            print(f"Connected by {addr}")
-            while True:
-                req = conn.recv(1024)
-                if not req:
-                    break
-                response = parseRequest(req.decode())
+        #is used to change state to locked
+        print_lock.acquire()
+        start_new_thread(threaded, (conn,))
 
-                conn.sendall(response.encode())
+    s.close()
+
+
+
+
+if __name__ == '__main__':
+    Main()
+
             
