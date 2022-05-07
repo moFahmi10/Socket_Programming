@@ -58,8 +58,8 @@ def threaded(c):
             # lock released on exit
             print_lock.release()
             break
-        response = parseRequest(data.decode())
-        c.sendall(response.encode())
+        response = parseRequest(data.decode('utf-8'))
+        c.sendall(response.encode('utf-8'))
     # connection closed
     c.close()
      
