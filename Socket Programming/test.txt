@@ -1,3 +1,0 @@
-This is a test file 
-use this as a test 
-for the server
